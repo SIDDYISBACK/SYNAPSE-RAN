@@ -1,4 +1,4 @@
-# SYNAPSE-RAN: Symbiotic Neural Architecture for Power-efficient SE-RAN
+# SYNAPSE-RAN: Symbiotic Neural Architecture for Power-efficient Security Enhanced-Radio Access Netowrk
 
 ## 1. Abstract and Technical Definition
 SYNAPSE-RAN represents a standalone research entity focused on the development of an **AI-Native Air Interface** for 6G communications. The system transitions traditional Digital Signal Processing (DSP) functions—specifically phase synchronization and error correction—into a unified, symbiotic neural framework. By integrating physical constraints directly into a deep learning backbone, the architecture provides a hardware-efficient solution for software-defined edge-RAN deployment.

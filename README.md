@@ -1,15 +1,16 @@
 # SYNAPSE-RAN
 ### Symbiotic Neural Architecture for Power-efficient, Security-Enhanced Radio Access Network
 
-> A research implementation of an AI-Native Air Interface for 6G communications, developed as an independent study project. The system replaces classical Digital Signal Processing (DSP) blocks — phase synchronization and bit decoding — with a unified neural framework operating directly on raw I/Q samples.
+> A research/learning implementation of an AI-Native Air Interface for 6G communications, developed as an independent study project. The system replaces classical Digital Signal Processing (DSP) blocks — such as phase synchronisation and bit decoding — with a unified neural framework that operates directly on raw I/Q samples.
 
 ---
 
-## Why This Exists
+## My Motivation for Learning and Building-
 
-The Nokia–NVIDIA AI-RAN initiative (backed by a $1B investment, announced October 2025) is built on one premise: **replace specialized fixed-function hardware with software-defined neural inference on GPU-accelerated shared compute**. The core engineering challenge is moving DSP functions — traditionally implemented as dedicated ASICs — into programmable, learnable models that can run on the same silicon handling AI traffic.
+The Nokia–NVIDIA AI-RAN initiative (backed by a $1B investment, announced October 2025) is built on one premise: **replace specialised fixed-function hardware with software-defined neural inference on GPU-accelerated shared compute**. The core engineering challenge is moving DSP functions — traditionally implemented as dedicated ASICs — into programmable, learnable models that can run on the same silicon used to handle AI traffic.
 
-SYNAPSE-RAN is a ground-up implementation of that idea at the physical layer. It does not simulate the idea — it builds and benchmarks it.
+SYNAPSE-RAN is a prototype ground-up implementation of that idea at the physical layer. It does not simulate the idea — it builds and benchmarks it.
+It still has needs of improvement.
 
 ---
 
@@ -85,7 +86,7 @@ The physical layer uses a Quasi-Cyclic LDPC code — the same class of codes use
 
 ### Why QC-LDPC
 
-Random LDPC matrices are hardware-unfriendly. QC-LDPC matrices are constructed from **Circulant Permutation Matrices (CPM)** — shifted identity matrices. This structure means the hardware only needs to store a single row per sub-matrix, and all 16 rows of a sub-matrix can be processed **in parallel**. This is why NVIDIA's Aerial SDK targets QC-LDPC specifically for GPU-accelerated baseband.
+Random LDPC matrices are not hardware-friendly. QC-LDPC matrices are constructed from **Circulant Permutation Matrices (CPM)** — shifted identity matrices. This structure means the hardware only needs to store a single row per sub-matrix, and all 16 rows of a sub-matrix can be processed **in parallel**. This is why NVIDIA's Aerial SDK targets QC-LDPC specifically for GPU-accelerated baseband.
 
 ### Girth-6 Construction
 
@@ -106,7 +107,7 @@ Rate-1/2 code: 64 information bits → 128 transmitted bits
 
 ## Training: Curriculum Learning with Warm Restarts
 
-Training a neural receiver from scratch on high-noise data fails — the model learns nothing because the signal-to-noise ratio is too low for meaningful gradient signal. SYNAPSE-RAN uses a three-phase curriculum:
+Training a neural receiver from scratch on high-noise data fails — the model learns nothing because the signal-to-noise ratio is too low for a meaningful gradient signal. SYNAPSE-RAN uses a three-phase curriculum:
 
 | Phase | SNR Range | Objective |
 |---|---|---|
@@ -122,9 +123,9 @@ The training loop uses **Cyclic Warm Restarts** — each cycle reloads the best 
 
 ## Hardware-Aware Deployment
 
-### INT8 Quantization via ONNX
+### INT8 Quantisation via ONNX
 
-The model is exported to ONNX Opset 18 (with graph simplification to resolve residual block constant folding) and then quantized using ONNX Runtime's dynamic INT8 quantizer — the same pipeline used for Nokia AirScale NPU deployment.
+The model is exported to ONNX Opset 18 (with graph simplification to resolve residual block constant folding) and then quantised using ONNX Runtime's dynamic INT8 quantizer — the same pipeline used for Nokia AirScale NPU deployment.
 
 | Metric | FP32 Baseline | INT8 Optimized |
 |---|---|---|
@@ -137,7 +138,7 @@ This 74.9% reduction is the difference between fitting on an edge node and not f
 
 ### Why This Matters for 6G
 
-The Nokia-NVIDIA AI-RAN architecture proposes turning underutilized radio site assets into **distributed AI grid factories** — shared GPU compute running both radio functions and third-party AI services simultaneously. Every kilobyte of model memory is kilobytes taken from that shared pool. Quantization is not optional in production deployment.
+The Nokia-NVIDIA AI-RAN architecture proposes turning underutilised radio site assets into **distributed AI grid factories** — shared GPU compute running both radio functions and third-party AI services simultaneously. Every kilobyte of model memory is a kilobyte taken from that shared pool. Quantisation is not optional in production deployment.
 
 ---
 
@@ -147,7 +148,7 @@ The Nokia-NVIDIA AI-RAN architecture proposes turning underutilized radio site a
 
 | Metric | Value |
 |---|---|
-| Best BCE Loss | 0.0231 |
+| Best BCE Loss | 0.0179 |
 | BER at SNR 8 dB | ~0.006 (99.4% accuracy) |
 | BER at SNR 12 dB | ~0.009 (<1% error rate) |
 | Coarse Phase MAE | ~4° |
@@ -187,7 +188,8 @@ The current decoder is a black-box bit predictor. The next architectural step em
 L_parity = ||H · b̂ᵀ mod 2||₁
 ```
 
-By penalizing parity violations during training, the decoder learns to output valid codewords rather than independent bit probabilities. This is projected to push the error floor from 10⁻³ toward 10⁻⁶ — the regime required for mission-critical 6G applications like autonomous vehicle communication and industrial automation.
+By penalising parity violations during training, the decoder learns to output valid codewords rather than independent bit probabilities. This is projected to push the error floor from 10⁻³ toward 10⁻⁶ — the regime required for mission-critical 6G applications like autonomous vehicle communication and industrial automation.
+Disclaimer-the above belief is still a hypothesis and needs testing and refining.
 
 ---
 
@@ -241,7 +243,7 @@ python train_auto.py
 # 2. Export to ONNX
 python export_onnx.py
 
-# 3. Quantize to INT8
+# 3. Quantise to INT8
 python quantize_brain.py
 
 # 4. Evaluate — generates 4-way BER comparison
@@ -249,6 +251,7 @@ python evaluate_final.py
 
 # 5. Real-time showcase
 python showcase_visualizer.py
+python showcase_visualizer_II.py
 ```
 
 ---
@@ -260,7 +263,7 @@ This is not a tutorial implementation of a known architecture. Each design decis
 | Problem | Root Cause | Solution Implemented |
 |---|---|---|
 | Bit loss stuck at 0.693 | Per-symbol Rayleigh fading made blind decoding statistically impossible | Block fading → solvable channel |
-| BCE plateau at 0.693 despite block fading | Rayleigh h randomizes both amplitude and phase per packet | Removed fading, isolated phase rotation as the learnable target |
+| BCE plateau at 0.693 despite block fading | Rayleigh h randomises both amplitude and phase per packet | Removed fading, isolated phase rotation as the learnable target |
 | Phase head learns, decoder doesn't | Phase prediction was a hint, not a physical correction | Differentiable rotation layer — decoder sees corrected constellation |
 | Training converges then regresses | LR collapses to 1e-8 while model still improvable | Cyclic warm restarts reset LR each cycle |
 | Error floor at high SNR | Residual 4° phase jitter causes deterministic boundary errors | Identified as architectural limit; documented as future work (NBP) |
@@ -268,13 +271,21 @@ This is not a tutorial implementation of a known architecture. Each design decis
 
 ---
 
+## Final output images-->
+
+(<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/18cf194f-3c3c-4cf7-a2be-b0e5e4708824" />)
+(<img width="1600" height="900" alt="image" src="https://github.com/user-attachments/assets/d3732c29-44ba-464e-9b9e-78098abd9ca8" />)
+(<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/951cd9d4-b479-40f8-8fe0-692165f3bd73" />)
+
+---
+
 ## Project Context
 
-Developed as an independent one-night research project during the second year of a B.Tech in Electronics and Communication Engineering (JIIT Noida, Batch 2027). Built entirely on a CPU-only laptop using PyTorch 2.11, ONNX Runtime, and NumPy.
+Developed as an independent introductory research project to affiliate myself with an emerging frontier of technology during the second year of my B.Tech in Electronics and Communication Engineering (JIIT Noida, Batch 2028). Built entirely on a CPU-only laptop using PyTorch 3.11, ONNX Runtime, and NumPy.
 
-The project was motivated by the Nokia–NVIDIA AI-RAN initiative and the broader 6G research agenda (commercial deployment: 2030). The architecture is specifically sized for edge deployment — the 15.25 MB INT8 ONNX artifact is designed to fit within the memory constraints of embedded NPUs like those in the NVIDIA Jetson series or Nokia's AirScale DU hardware.
+The project was motivated by the Nokia–NVIDIA AI-RAN initiative and the broader 6G research agenda (commercial deployment: 2030). The architecture is specifically sized for edge deployment — the 15.25 MB INT8 ONNX artefact is designed to fit within the memory constraints of embedded NPUs like those in the NVIDIA Jetson series or Nokia's AirScale DU hardware.
 
-**Relevant coursework**: Information Theory, Digital Communications, VLSI Design, Hardware-Aware AI.
+**My Base coursework**: Information Theory, Digital Signal Processing, Telecommunication, Hardware-Aware AI.
 
 ---
 
@@ -283,10 +294,6 @@ The project was motivated by the Nokia–NVIDIA AI-RAN initiative and the broade
 **Sidhant**  
 B.Tech Electronics and Communication Engineering  
 Jaypee Institute of Information Technology, Noida  
-Batch of 2027
-
-[LinkedIn] | [GitHub] | [Email]
+Batch of 2028
 
 ---
-
-*SYNAPSE-RAN is an independent research project. It is not affiliated with Nokia, NVIDIA, or any telecommunications standard body.*
